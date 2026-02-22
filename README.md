@@ -7,13 +7,14 @@ A cross-tool compatible skill that sends audio notifications to Google Nest/Home
 - **Factory/Droid** - Install as a custom droid
 - **Claude Code** - Use the shell script or read SKILL.md
 - **Codex** - Use the shell script or Python helper
-- **Any AI tool** - Just call the HTTP endpoint
+- **Any AI tool** - Just call the commands API
 
 ## Quick Start
 
 ```bash
-# Set your gateway URL
-export IOT_GATEWAY_URL="http://rpi:8080"
+# Create config (optional)
+mkdir -p ~/.config
+echo '{"gateway_url":"http://rpi:8080","default_device":"cast_192.168.68.56"}' > ~/.config/notify-skill.json
 
 # Send a notification
 ./notify.sh "Task completed successfully"
@@ -34,15 +35,31 @@ cp task-notify.md ~/.factory/droids/task-notify.md
 
 Source the shell script or use the Python helper directly.
 
-## API Endpoint
+## API
+
+Uses the existing IoT Gateway commands endpoint:
 
 ```
-POST /api/v1/notify
+POST /api/v1/commands
 Content-Type: application/json
 
 {
-  "message": "Your message here",
-  "device_id": "cast_192.168.68.56"  // optional
+  "commands": [{
+    "device_id": "cast_192.168.68.56",
+    "action": "speak",
+    "params": {"message": "Your message here"}
+  }]
+}
+```
+
+## Config File
+
+`~/.config/notify-skill.json`:
+
+```json
+{
+  "gateway_url": "http://rpi:8080",
+  "default_device": "cast_192.168.68.56"
 }
 ```
 

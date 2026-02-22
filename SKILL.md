@@ -1,64 +1,50 @@
 # Notify Skill
 
-A cross-tool compatible skill that sends audio notifications to your smart speakers when AI tasks complete.
+A cross-tool compatible skill that sends audio notifications to your Google Nest/Home speakers when AI tasks complete.
 
 ## What it does
 
-Sends a text-to-speech message to your Google Nest/Home speakers via your Home IoT Gateway.
+Sends a text-to-speech message to your smart speakers using the existing IoT Gateway commands API.
 
 ## Usage
 
-After completing a task, call the notify endpoint to announce completion:
+After completing a task, call the commands endpoint:
 
 ```bash
-curl -X POST http://YOUR_GATEWAY_IP:8080/api/v1/notify \
+curl -X POST http://YOUR_PI:8080/api/v1/commands \
   -H "Content-Type: application/json" \
-  -d '{"message": "Task completed successfully"}'
+  -d '{"commands":[{"device_id":"cast_192.168.68.56","action":"speak","params":{"message":"YOUR_MESSAGE_HERE"}}]}'
 ```
 
-## Parameters
+## Configuration (optional)
 
-| Parameter | Required | Description |
-|-----------|----------|-------------|
-| `message` | Yes | The message to speak |
-| `device_id` | No | Target speaker ID (defaults to living room) |
+Create `~/.config/notify-skill.json` for defaults:
 
-## Examples
-
-### Simple notification
-```bash
-curl -X POST http://rpi:8080/api/v1/notify \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Your code has been deployed"}'
+```json
+{
+  "gateway_url": "http://rpi:8080",
+  "default_device": "cast_192.168.68.56"
+}
 ```
 
-### Specify device
-```bash
-curl -X POST http://rpi:8080/api/v1/notify \
-  -H "Content-Type: application/json" \
-  -d '{"message": "Build complete", "device_id": "cast_192.168.68.61"}'
-```
+Then use the helper script:
 
-### Using the shell script
 ```bash
 ./notify.sh "Task completed successfully"
 ```
 
-## Setup
-
-1. Ensure your Home IoT Gateway is running
-2. Set the `IOT_GATEWAY_URL` environment variable:
-   ```bash
-   export IOT_GATEWAY_URL="http://rpi:8080"
-   ```
-
 ## Device IDs
 
 Discover available speakers:
+
 ```bash
-curl -s http://rpi:8080/api/v1/devices | grep -o '"id":"cast_[^"]*"'
+curl -s http://rpi:8080/api/v1/devices/discover -X POST -H "Content-Type: application/json" -d '{"platform":"cast"}'
 ```
 
 Common device IDs:
-- `cast_192.168.68.56` - Living room Nest Audio
+- `cast_192.168.68.56` - Living room Nest Audio  
 - `cast_192.168.68.61` - Estudio Nest Mini
+
+## MCP Alternative
+
+If your tool supports MCP, you can also use the `control_devices` tool via the MCP endpoint at `/mcp`.
