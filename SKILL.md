@@ -1,50 +1,44 @@
 # Notify Skill
 
-A cross-tool compatible skill that sends audio notifications to your Google Nest/Home speakers when AI tasks complete.
+A skill that lets AI assistants notify you via smart speaker when you ask them to.
 
-## What it does
+## How it works
 
-Sends a text-to-speech message to your smart speakers using the existing IoT Gateway commands API.
+When you say things like:
+- "Let me know when you're done"
+- "Notify me when finished"
+- "Tell me when complete"
+
+The LLM reads this skill and uses the IoT Gateway MCP to send a TTS message to your speaker.
 
 ## Usage
 
-After completing a task, call the commands endpoint:
+Use the MCP `control_devices` tool:
 
-```bash
-curl -X POST http://YOUR_PI:8080/api/v1/commands \
-  -H "Content-Type: application/json" \
-  -d '{"commands":[{"device_id":"cast_192.168.68.56","action":"speak","params":{"message":"YOUR_MESSAGE_HERE"}}]}'
 ```
-
-## Configuration (optional)
-
-Create `~/.config/notify-skill.json` for defaults:
-
-```json
-{
-  "gateway_url": "http://rpi:8080",
-  "default_device": "cast_192.168.68.56"
-}
-```
-
-Then use the helper script:
-
-```bash
-./notify.sh "Task completed successfully"
+device_id: cast_192.168.68.56
+action: speak
+params: { "message": "YOUR_MESSAGE" }
 ```
 
 ## Device IDs
 
-Discover available speakers:
-
-```bash
-curl -s http://rpi:8080/api/v1/devices/discover -X POST -H "Content-Type: application/json" -d '{"platform":"cast"}'
-```
-
-Common device IDs:
-- `cast_192.168.68.56` - Living room Nest Audio  
+- `cast_192.168.68.56` - Living room Nest Audio
 - `cast_192.168.68.61` - Estudio Nest Mini
 
-## MCP Alternative
+## Installation
 
-If your tool supports MCP, you can also use the `control_devices` tool via the MCP endpoint at `/mcp`.
+```bash
+# Clone the repo
+git clone https://github.com/fmartinezgodoy/notify-skill.git
+
+# Install for Factory/Droid
+mkdir -p ~/.factory/droids
+cp notify-skill/task-notify.md ~/.factory/droids/
+```
+
+## Requirements
+
+- Home IoT Gateway running (https://github.com/fmartinezgodoy/home-iot-gateway)
+- Google Nest/Home speakers configured
+- MCP configured to point to your gateway
