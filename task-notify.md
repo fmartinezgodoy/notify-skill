@@ -1,51 +1,35 @@
 ---
 name: task-notify
-description: Notify user via smart speaker when tasks complete
-invocation:
-  - when: always
-    events:
-      - stop
-      - subagent_stop
+description: Notify user via smart speaker when requested
 ---
 
 # Task Notify Skill
 
-After completing a significant task, notify the user via their smart speaker.
+Use this skill when the user asks you to notify them when a task is complete (e.g., "let me know when you're done", "notify me when finished").
 
 ## How to notify
 
-Use the IoT Gateway MCP to send a TTS message:
+Call the IoT Gateway MCP `control_devices` tool:
 
-### Using MCP tool (preferred)
-The IoT Gateway exposes an MCP server at `http://rpi:8080/mcp` with a `control_devices` tool.
-
-Call it with:
 ```
 device_id: cast_192.168.68.56
-action: speak
-params: { "message": "YOUR_MESSAGE_HERE" }
+action: speak  
+params: { "message": "YOUR_MESSAGE" }
 ```
 
-### Using HTTP API directly
+Or use the HTTP API:
 ```bash
 curl -X POST http://rpi:8080/api/v1/commands \
   -H "Content-Type: application/json" \
   -d '{"commands":[{"device_id":"cast_192.168.68.56","action":"speak","params":{"message":"YOUR_MESSAGE"}}]}'
 ```
 
-## When to notify
-- After committing code
-- After passing tests
-- After deployment
-- After creating a PR
-- After completing a significant feature
-
 ## Message format
-Be specific about what was completed:
-- "Committed changes to authentication module"
-- "All tests passed for user service"
-- "Deployed version 1.2.0 to production"
+Summarize what was completed:
+- "Code changes committed and pushed"
+- "Tests passed, deployment complete"
+- "Feature implementation finished"
 
-## Device options
-- `cast_192.168.68.56` - Living room (default)
+## Devices
+- `cast_192.168.68.56` - Living room
 - `cast_192.168.68.61` - Estudio
