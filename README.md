@@ -1,70 +1,87 @@
 # Notify Skill
 
-A cross-tool compatible skill that sends audio notifications to Google Nest/Home speakers when AI coding tasks complete.
+A cross-tool compatible skill with hooks for automatic notifications when AI tasks complete.
 
-## Compatible With
+## Components
 
-- **Factory/Droid** - Install as a custom droid
-- **Claude Code** - Use the shell script or read SKILL.md
-- **Codex** - Use the shell script or Python helper
-- **Any AI tool** - Just call the commands API
-
-## Quick Start
-
-```bash
-# Create config (optional)
-mkdir -p ~/.config
-echo '{"gateway_url":"http://rpi:8080","default_device":"cast_192.168.68.56"}' > ~/.config/notify-skill.json
-
-# Send a notification
-./notify.sh "Task completed successfully"
-```
+| File | Purpose |
+|------|---------|
+| `task-notify.md` | Skill instructions (for Droid/LLM to read) |
+| `notify-on-stop.py` | Hook script (auto-runs on task completion) |
+| `notify.sh` | Manual helper script |
+| `notify.py` | Manual Python helper |
 
 ## Installation
 
-### For Factory/Droid
-
-Copy `task-notify.md` to your droids directory:
-
+### 1. Clone and setup
 ```bash
+git clone https://github.com/fmartinezgodoy/notify-skill.git
+cd notify-skill
+```
+
+### 2. Install for Factory/Droid
+```bash
+# Install skill
 mkdir -p ~/.factory/droids
-cp task-notify.md ~/.factory/droids/task-notify.md
+cp task-notify.md ~/.factory/droids/
+
+# Install hook
+mkdir -p ~/.factory/hooks
+cp notify-on-stop.py ~/.factory/hooks/
+chmod +x ~/.factory/hooks/notify-on-stop.py
 ```
 
-### For other tools
-
-Source the shell script or use the Python helper directly.
-
-## API
-
-Uses the existing IoT Gateway commands endpoint:
-
-```
-POST /api/v1/commands
-Content-Type: application/json
-
-{
-  "commands": [{
-    "device_id": "cast_192.168.68.56",
-    "action": "speak",
-    "params": {"message": "Your message here"}
-  }]
-}
-```
-
-## Config File
-
-`~/.config/notify-skill.json`:
-
+### 3. Add hooks to settings
+Add to `~/.factory/settings.json`:
 ```json
 {
-  "gateway_url": "http://rpi:8080",
-  "default_device": "cast_192.168.68.56"
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.factory/hooks/notify-on-stop.py"
+          }
+        ]
+      }
+    ],
+    "SubagentStop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 ~/.factory/hooks/notify-on-stop.py"
+          }
+        ]
+      }
+    ]
+  }
 }
 ```
 
-## Requirements
+### 4. Configure (optional)
+```bash
+# Set environment variables
+export IOT_GATEWAY_URL="http://rpi:8080"
+export NOTIFY_DEVICE_ID="cast_192.168.68.56"
+```
 
-- Home IoT Gateway running on your network
-- Google Nest/Home speakers configured
-- Network access to the gateway
+## How it works
+
+1. **Skill** (`task-notify.md`) - Instructions for the LLM to follow
+2. **Hook** (`notify-on-stop.py`) - Automatically triggers on Stop/SubagentStop events
+3. **MCP** - The IoT Gateway exposes MCP tools at `/mcp`
+
+## Manual usage
+```bash
+./notify.sh "Custom message"
+```
+
+## For other tools (Claude Code, Codex)
+Use the HTTP API directly:
+```bash
+curl -X POST http://rpi:8080/api/v1/commands \
+  -H "Content-Type: application/json" \
+  -d '{"commands":[{"device_id":"cast_192.168.68.56","action":"speak","params":{"message":"Done"}}]}'
+```
